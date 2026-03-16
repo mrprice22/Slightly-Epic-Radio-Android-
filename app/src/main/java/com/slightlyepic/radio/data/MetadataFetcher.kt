@@ -86,16 +86,23 @@ class MetadataFetcher {
         return NowPlaying()
     }
 
+    private fun stripHtml(text: String): String {
+        return text.replace(Regex("</?br\\s*/?>", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("<[^>]*>"), "")
+            .trim()
+    }
+
     private fun parseTrackString(text: String): NowPlaying {
+        val cleaned = stripHtml(text)
         // Try "Artist - Title" format
-        val dashIndex = text.indexOf(" - ")
+        val dashIndex = cleaned.indexOf(" - ")
         return if (dashIndex > 0) {
             NowPlaying(
-                artist = text.substring(0, dashIndex).trim(),
-                title = text.substring(dashIndex + 3).trim()
+                artist = cleaned.substring(0, dashIndex).trim(),
+                title = cleaned.substring(dashIndex + 3).trim()
             )
         } else {
-            NowPlaying(title = text.trim())
+            NowPlaying(title = cleaned.trim())
         }
     }
 }
