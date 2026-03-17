@@ -30,6 +30,15 @@ object StationRepository {
         ),
         Station(
             id = 1,
+            title = "K.G.L.W. Bootlegger",
+            streamUrl = "https://gizzradio.live/listen/listen/radio.mp3",
+            streamFormat = "mp3",
+            logoResName = "kglw_bootlegger",
+            metaUrl = "https://gizzradio.live/listen/listen/status-json.xsl",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 2,
             title = "EDM Techno Forever",
             streamUrl = "http://ec1.yesstreaming.net:3500/stream",
             streamFormat = "mp3",
@@ -38,7 +47,7 @@ object StationRepository {
             metaType = MetaType.ICECAST
         ),
         Station(
-            id = 2,
+            id = 3,
             title = "Electronic Dance Radio",
             streamUrl = "http://mpc1.mediacp.eu:18000/stream",
             streamFormat = "mp3",
@@ -47,7 +56,7 @@ object StationRepository {
             metaType = MetaType.ICECAST
         ),
         Station(
-            id = 3,
+            id = 4,
             title = "The Epic Channel",
             streamUrl = "http://fra-pioneer08.dedicateware.com:1100/stream",
             streamFormat = "mp3",
@@ -56,7 +65,7 @@ object StationRepository {
             metaType = MetaType.ICECAST
         ),
         Station(
-            id = 4,
+            id = 5,
             title = "Classical Public Domain Radio",
             streamUrl = "http://relay.publicdomainradio.org/classical.mp3",
             streamFormat = "mp3",
@@ -65,21 +74,12 @@ object StationRepository {
             metaType = MetaType.NONE
         ),
         Station(
-            id = 5,
+            id = 6,
             title = "Cafe HD",
             streamUrl = "http://live.playradio.org:9090/CafeHD",
             streamFormat = "aac",
             logoResName = "cafe_hd",
             metaUrl = "http://live.playradio.org:9090/status-json.xsl",
-            metaType = MetaType.ICECAST
-        ),
-        Station(
-            id = 6,
-            title = "Zen Garden",
-            streamUrl = "https://kathy.torontocast.com:3250/stream",
-            streamFormat = "mp3",
-            logoResName = "zen_garden",
-            metaUrl = "https://kathy.torontocast.com:3250/status-json.xsl",
             metaType = MetaType.ICECAST
         ),
         Station(
@@ -134,6 +134,15 @@ object StationRepository {
             streamFormat = "mp3",
             logoResName = "ultimate_chill_radio",
             metaUrl = "http://ec1.yesstreaming.net:3290/status-json.xsl",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 13,
+            title = "Zen Garden",
+            streamUrl = "https://kathy.torontocast.com:3250/stream",
+            streamFormat = "mp3",
+            logoResName = "zen_garden",
+            metaUrl = "https://kathy.torontocast.com:3250/status-json.xsl",
             metaType = MetaType.ICECAST
         )
     )
