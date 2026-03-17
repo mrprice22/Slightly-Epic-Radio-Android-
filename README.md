@@ -1,6 +1,6 @@
 # Slightly Epic Radio - Android
 
-An internet radio player for Android featuring 10 curated stations across multiple genres. This is the Android companion to the [Slightly Epic Radio Roku app](../Slightly-Epic-Radio-Roku-).
+An internet radio player for Android featuring 13 curated stations across multiple genres. This is the Android companion to the [Slightly Epic Radio Roku app](../Slightly-Epic-Radio-Roku-).
 
 ## Stations
 
@@ -16,10 +16,13 @@ An internet radio player for Android featuring 10 curated stations across multip
 | Badlands Classic Rock | Classic Rock | AAC | http://ec3.yesstreaming.net:2040/stream |
 | UTurn Classic Rock | Classic Rock | MP3 | http://listen.uturnradio.com:7000/classic_rock |
 | Alternative | Alternative Rock | AAC | http://stream.xrm.fm:8000/xrm-alt.aac |
+| Chill Lounge | Chill / Lounge | AAC | http://harddanceradio.ddns.is74.ru:8000/lounge |
+| Time 2 Chill Radio | Chill / Ambient | MP3 | http://ec6.yesstreaming.net:3610/stream |
+| Ultimate Chill | Chill / Ambient | MP3 | http://ec1.yesstreaming.net:3290/stream |
 
 ## Features
 
-- Stream 10 internet radio stations (MP3 and AAC)
+- Stream 13 internet radio stations (MP3 and AAC)
 - Live now-playing metadata (song title and artist) via Icecast and Shoutcast endpoints, polled every 20 seconds
 - Background playback with Android media notification controls
 - Lock screen display showing current song/artist and station name
