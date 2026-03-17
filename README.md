@@ -1,5 +1,7 @@
 # Slightly Epic Radio - Android
 
+![](app/src/main/res/drawable/slightly_epic_radio_icon.jpg)
+
 An internet radio player for Android featuring 14 curated stations across multiple genres. This is the Android companion to the [Slightly Epic Radio Roku app](../Slightly-Epic-Radio-Roku-).
 
 ## Stations
@@ -32,13 +34,14 @@ An internet radio player for Android featuring 14 curated stations across multip
 
 ## Tech Stack
 
-- **Language:** Kotlin
-- **UI:** Jetpack Compose + Material 3
-- **Audio:** AndroidX Media3 (ExoPlayer) with MediaSessionService
-- **Networking:** OkHttp (metadata fetching)
+- **Language:** Kotlin 1.9
+- **UI:** Jetpack Compose (BOM 2024.06.00) + Material 3
+- **Audio:** AndroidX Media3 1.2.1 (ExoPlayer) with MediaSessionService
+- **Images:** Coil 2.5 (Compose integration)
+- **Networking:** OkHttp 4.12 (metadata fetching)
 - **Preferences:** Jetpack DataStore
 - **Min SDK:** 24 (Android 7.0)
-- **Target SDK:** 34 (Android 14)
+- **Target SDK:** 35 (Android 15)
 
 ## Project Structure
 
