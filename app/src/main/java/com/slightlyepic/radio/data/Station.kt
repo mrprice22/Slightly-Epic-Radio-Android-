@@ -108,6 +108,33 @@ object StationRepository {
             logoResName = "alternative",
             metaUrl = "http://stream.xrm.fm:8000/7.html",
             metaType = MetaType.SHOUTCAST
+        ),
+        Station(
+            id = 10,
+            title = "Chill Lounge",
+            streamUrl = "http://harddanceradio.ddns.is74.ru:8000/lounge",
+            streamFormat = "aac",
+            logoResName = "chill_lounge_radio",
+            metaUrl = "http://harddanceradio.ddns.is74.ru:8000/status-json.xsl",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 11,
+            title = "Time 2 Chill Radio",
+            streamUrl = "http://ec6.yesstreaming.net:3610/stream",
+            streamFormat = "mp3",
+            logoResName = "time_2_chill_radio",
+            metaUrl = "http://ec6.yesstreaming.net:3610/status-json.xsl",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 12,
+            title = "Ultimate Chill",
+            streamUrl = "http://ec1.yesstreaming.net:3290/stream",
+            streamFormat = "mp3",
+            logoResName = "ultimate_chill_radio",
+            metaUrl = "http://ec1.yesstreaming.net:3290/status-json.xsl",
+            metaType = MetaType.ICECAST
         )
     )
 }
