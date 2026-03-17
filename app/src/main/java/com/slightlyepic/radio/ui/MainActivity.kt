@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
@@ -16,6 +17,7 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
+import com.slightlyepic.radio.data.NowPlaying
 import com.slightlyepic.radio.data.Station
 import com.slightlyepic.radio.service.RadioPlaybackService
 import com.slightlyepic.radio.ui.theme.SlightlyEpicRadioTheme
@@ -31,6 +33,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         requestNotificationPermission()
 
         setContent {
@@ -63,6 +66,9 @@ class MainActivity : ComponentActivity() {
             viewModel.onPlayStation = { station -> playStation(controller, station) }
             viewModel.onPause = { controller.pause() }
             viewModel.onResume = { controller.play() }
+            viewModel.onUpdateMetadata = { nowPlaying, station ->
+                updateLockScreenMetadata(controller, nowPlaying, station)
+            }
 
             // Sync state if player is already active
             controller.addListener(object : Player.Listener {
@@ -83,7 +89,7 @@ class MainActivity : ComponentActivity() {
             .setMediaMetadata(
                 MediaMetadata.Builder()
                     .setTitle(station.title)
-                    .setArtist("Slightly Epic Radio")
+                    .setArtist(station.title)
                     .build()
             )
             .build()
@@ -91,6 +97,24 @@ class MainActivity : ComponentActivity() {
         controller.setMediaItem(mediaItem)
         controller.prepare()
         controller.play()
+    }
+
+    private fun updateLockScreenMetadata(
+        controller: MediaController,
+        nowPlaying: NowPlaying,
+        station: Station
+    ) {
+        val currentItem = controller.currentMediaItem ?: return
+        val updatedItem = currentItem.buildUpon()
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(nowPlaying.displayText)
+                    .setArtist(station.title)
+                    .build()
+            )
+            .build()
+
+        controller.replaceMediaItem(controller.currentMediaItemIndex, updatedItem)
     }
 
     private fun requestNotificationPermission() {

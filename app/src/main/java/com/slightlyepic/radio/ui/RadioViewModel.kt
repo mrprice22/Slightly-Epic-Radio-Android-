@@ -40,6 +40,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     var onPlayStation: ((Station) -> Unit)? = null
     var onPause: (() -> Unit)? = null
     var onResume: (() -> Unit)? = null
+    var onUpdateMetadata: ((nowPlaying: NowPlaying, station: Station) -> Unit)? = null
 
     init {
         viewModelScope.launch {
@@ -96,6 +97,9 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
                 val station = _uiState.value.selectedStation
                 val nowPlaying = metadataFetcher.fetch(station)
                 _uiState.value = _uiState.value.copy(nowPlaying = nowPlaying)
+                if (nowPlaying.displayText.isNotBlank()) {
+                    onUpdateMetadata?.invoke(nowPlaying, station)
+                }
                 delay(20_000) // Poll every 20 seconds, matching Roku app
             }
         }
