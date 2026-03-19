@@ -57,15 +57,6 @@ object StationRepository {
         ),
         Station(
             id = 4,
-            title = "The Epic Channel",
-            streamUrl = "http://fra-pioneer08.dedicateware.com:1100/stream",
-            streamFormat = "mp3",
-            logoResName = "the_epic_channel",
-            metaUrl = "http://fra-pioneer08.dedicateware.com:1100/status-json.xsl",
-            metaType = MetaType.ICECAST
-        ),
-        Station(
-            id = 5,
             title = "Classical Public Domain Radio",
             streamUrl = "http://relay.publicdomainradio.org/classical.mp3",
             streamFormat = "mp3",
@@ -74,12 +65,21 @@ object StationRepository {
             metaType = MetaType.NONE
         ),
         Station(
-            id = 6,
+            id = 5,
             title = "Cafe HD",
             streamUrl = "http://live.playradio.org:9090/CafeHD",
             streamFormat = "aac",
             logoResName = "cafe_hd",
             metaUrl = "http://live.playradio.org:9090/status-json.xsl",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 6,
+            title = "The Epic Channel",
+            streamUrl = "http://fra-pioneer08.dedicateware.com:1100/stream",
+            streamFormat = "mp3",
+            logoResName = "the_epic_channel",
+            metaUrl = "http://fra-pioneer08.dedicateware.com:1100/status-json.xsl",
             metaType = MetaType.ICECAST
         ),
         Station(
@@ -111,6 +111,24 @@ object StationRepository {
         ),
         Station(
             id = 10,
+            title = "Stacey Radio",
+            streamUrl = "http://stacey-campbell.com:8001/dadradio.mp3",
+            streamFormat = "mp3",
+            logoResName = "stacey_radio",
+            metaUrl = "http://stacey-campbell.com:8001/status-json.xsl",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 11,
+            title = "SOL FM",
+            streamUrl = "http://radiosolfm.bounceme.net:8002/solfm",
+            streamFormat = "aac",
+            logoResName = "sol_fm",
+            metaUrl = "http://radiosolfm.bounceme.net:8002/status-json.xsl",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 12,
             title = "Chill Lounge",
             streamUrl = "http://harddanceradio.ddns.is74.ru:8000/lounge",
             streamFormat = "aac",
@@ -119,7 +137,7 @@ object StationRepository {
             metaType = MetaType.ICECAST
         ),
         Station(
-            id = 11,
+            id = 13,
             title = "Time 2 Chill Radio",
             streamUrl = "http://ec6.yesstreaming.net:3610/stream",
             streamFormat = "mp3",
@@ -128,8 +146,8 @@ object StationRepository {
             metaType = MetaType.ICECAST
         ),
         Station(
-            id = 12,
-            title = "Ultimate Chill",
+            id = 14,
+            title = "Ultimate Chill (Pop)",
             streamUrl = "http://ec1.yesstreaming.net:3290/stream",
             streamFormat = "mp3",
             logoResName = "ultimate_chill_radio",
@@ -137,7 +155,7 @@ object StationRepository {
             metaType = MetaType.ICECAST
         ),
         Station(
-            id = 13,
+            id = 15,
             title = "Zen Garden",
             streamUrl = "https://kathy.torontocast.com:3250/stream",
             streamFormat = "mp3",
