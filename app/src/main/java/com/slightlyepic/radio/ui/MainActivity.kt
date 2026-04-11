@@ -17,7 +17,6 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
-import com.slightlyepic.radio.data.NowPlaying
 import com.slightlyepic.radio.data.Station
 import com.slightlyepic.radio.service.RadioPlaybackService
 import com.slightlyepic.radio.ui.theme.SlightlyEpicRadioTheme
@@ -62,59 +61,45 @@ class MainActivity : ComponentActivity() {
             val controller = controllerFuture.get()
             mediaController = controller
 
-            // Wire up ViewModel callbacks
             viewModel.onPlayStation = { station -> playStation(controller, station) }
             viewModel.onPause = { controller.pause() }
             viewModel.onResume = { controller.play() }
-            viewModel.onUpdateMetadata = { nowPlaying, station ->
-                updateLockScreenMetadata(controller, nowPlaying, station)
-            }
 
-            // Sync state if player is already active
             controller.addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     viewModel.updatePlayingState(isPlaying)
+                }
+
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    val stationId = mediaItem?.mediaId?.toIntOrNull() ?: return
+                    viewModel.onExternalStationChange(stationId)
+                    // Seed the UI from whatever metadata the new item carries.
+                    val md = mediaItem.mediaMetadata
+                    viewModel.updateNowPlayingFromMetadata(md.title?.toString(), md.artist?.toString())
+                }
+
+                override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                    viewModel.updateNowPlayingFromMetadata(
+                        mediaMetadata.title?.toString(),
+                        mediaMetadata.artist?.toString()
+                    )
                 }
             })
 
             if (controller.isPlaying) {
                 viewModel.updatePlayingState(true)
             }
+            // Pick up any metadata already on the session (e.g. app reopened while playing).
+            controller.currentMediaItem?.mediaMetadata?.let { md ->
+                viewModel.updateNowPlayingFromMetadata(md.title?.toString(), md.artist?.toString())
+            }
         }, MoreExecutors.directExecutor())
     }
 
     private fun playStation(controller: MediaController, station: Station) {
-        val mediaItem = MediaItem.Builder()
-            .setUri(station.streamUrl)
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(station.title)
-                    .setArtist(station.title)
-                    .build()
-            )
-            .build()
-
-        controller.setMediaItem(mediaItem)
+        controller.setMediaItem(RadioPlaybackService.buildStationMediaItem(station))
         controller.prepare()
         controller.play()
-    }
-
-    private fun updateLockScreenMetadata(
-        controller: MediaController,
-        nowPlaying: NowPlaying,
-        station: Station
-    ) {
-        val currentItem = controller.currentMediaItem ?: return
-        val updatedItem = currentItem.buildUpon()
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(nowPlaying.displayText)
-                    .setArtist(station.title)
-                    .build()
-            )
-            .build()
-
-        controller.replaceMediaItem(controller.currentMediaItemIndex, updatedItem)
     }
 
     private fun requestNotificationPermission() {

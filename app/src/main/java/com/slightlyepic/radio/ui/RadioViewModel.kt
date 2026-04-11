@@ -3,13 +3,10 @@ package com.slightlyepic.radio.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.slightlyepic.radio.data.MetadataFetcher
 import com.slightlyepic.radio.data.NowPlaying
 import com.slightlyepic.radio.data.PreferencesManager
 import com.slightlyepic.radio.data.Station
 import com.slightlyepic.radio.data.StationRepository
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,18 +26,14 @@ data class RadioUiState(
 class RadioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val preferencesManager = PreferencesManager(application)
-    private val metadataFetcher = MetadataFetcher()
 
     private val _uiState = MutableStateFlow(RadioUiState())
     val uiState: StateFlow<RadioUiState> = _uiState.asStateFlow()
-
-    private var metadataJob: Job? = null
 
     // Player control callbacks — set by MainActivity when controller connects
     var onPlayStation: ((Station) -> Unit)? = null
     var onPause: (() -> Unit)? = null
     var onResume: (() -> Unit)? = null
-    var onUpdateMetadata: ((nowPlaying: NowPlaying, station: Station) -> Unit)? = null
 
     init {
         viewModelScope.launch {
@@ -67,14 +60,12 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
         val station = _uiState.value.selectedStation
         onPlayStation?.invoke(station)
         _uiState.value = _uiState.value.copy(isPlaying = true)
-        startMetadataPolling()
     }
 
     fun togglePlayPause() {
         if (_uiState.value.isPlaying) {
             onPause?.invoke()
             _uiState.value = _uiState.value.copy(isPlaying = false)
-            stopMetadataPolling()
         } else {
             if (onResume != null) {
                 onResume?.invoke()
@@ -82,7 +73,6 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
                 onPlayStation?.invoke(_uiState.value.selectedStation)
             }
             _uiState.value = _uiState.value.copy(isPlaying = true)
-            startMetadataPolling()
         }
     }
 
@@ -90,28 +80,52 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(isPlaying = isPlaying)
     }
 
-    private fun startMetadataPolling() {
-        stopMetadataPolling()
-        metadataJob = viewModelScope.launch {
-            while (true) {
-                val station = _uiState.value.selectedStation
-                val nowPlaying = metadataFetcher.fetch(station)
-                _uiState.value = _uiState.value.copy(nowPlaying = nowPlaying)
-                if (nowPlaying.displayText.isNotBlank()) {
-                    onUpdateMetadata?.invoke(nowPlaying, station)
-                }
-                delay(20_000) // Poll every 20 seconds, matching Roku app
-            }
+    /** Called when the underlying player switches stations on its own (e.g. via Bluetooth next/prev). */
+    fun onExternalStationChange(stationId: Int) {
+        val stations = _uiState.value.stations
+        val newIndex = stations.indexOfFirst { it.id == stationId }
+        if (newIndex < 0 || newIndex == _uiState.value.selectedStationIndex) return
+
+        _uiState.value = _uiState.value.copy(
+            selectedStationIndex = newIndex,
+            nowPlaying = NowPlaying()
+        )
+
+        viewModelScope.launch {
+            preferencesManager.saveLastStationIndex(newIndex)
         }
     }
 
-    private fun stopMetadataPolling() {
-        metadataJob?.cancel()
-        metadataJob = null
+    /**
+     * Called when the media session's metadata changes — either because the service's polling
+     * pushed fresh now-playing info or because a new station was loaded. We only surface it to the
+     * UI when it's real track info, not the station-name placeholder.
+     */
+    fun updateNowPlayingFromMetadata(title: String?, artist: String?) {
+        val t = title?.trim().orEmpty()
+        val a = artist?.trim().orEmpty()
+        val current = _uiState.value
+        val stationName = current.selectedStation.title
+
+        // Placeholder items have title == artist == station name — treat as "no track info yet".
+        val looksLikeStationPlaceholder = t.isBlank() || t == a || t == stationName
+        val nowPlaying = if (looksLikeStationPlaceholder) {
+            NowPlaying()
+        } else {
+            parseDisplayText(t)
+        }
+        _uiState.value = current.copy(nowPlaying = nowPlaying)
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        stopMetadataPolling()
+    private fun parseDisplayText(text: String): NowPlaying {
+        val dash = text.indexOf(" - ")
+        return if (dash > 0) {
+            NowPlaying(
+                artist = text.substring(0, dash).trim(),
+                title = text.substring(dash + 3).trim()
+            )
+        } else {
+            NowPlaying(title = text)
+        }
     }
 }
