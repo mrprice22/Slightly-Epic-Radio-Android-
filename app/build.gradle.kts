@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.slightlyepic.radio"
+    namespace = "com.SlightlyEpic.Radio"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.slightlyepic.radio"
+        applicationId = "com.SlightlyEpic.Radio"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -76,3 +76,5 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
+
+tasks.register("testClasses")

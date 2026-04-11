@@ -1,12 +1,12 @@
-package com.slightlyepic.radio.ui
+package com.SlightlyEpic.Radio.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.slightlyepic.radio.data.NowPlaying
-import com.slightlyepic.radio.data.PreferencesManager
-import com.slightlyepic.radio.data.Station
-import com.slightlyepic.radio.data.StationRepository
+import com.SlightlyEpic.Radio.data.NowPlaying
+import com.SlightlyEpic.Radio.data.PreferencesManager
+import com.SlightlyEpic.Radio.data.Station
+import com.SlightlyEpic.Radio.data.StationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

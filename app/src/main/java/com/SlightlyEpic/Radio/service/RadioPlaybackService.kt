@@ -1,4 +1,4 @@
-package com.slightlyepic.radio.service
+package com.SlightlyEpic.Radio.service
 
 import android.content.Intent
 import androidx.annotation.OptIn
@@ -10,10 +10,10 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import com.slightlyepic.radio.data.MetadataFetcher
-import com.slightlyepic.radio.data.NowPlaying
-import com.slightlyepic.radio.data.Station
-import com.slightlyepic.radio.data.StationRepository
+import com.SlightlyEpic.Radio.data.MetadataFetcher
+import com.SlightlyEpic.Radio.data.NowPlaying
+import com.SlightlyEpic.Radio.data.Station
+import com.SlightlyEpic.Radio.data.StationRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -102,7 +102,7 @@ class RadioPlaybackService : MediaSessionService() {
 
     private fun startMetadataPolling(station: Station) {
         stopMetadataPolling()
-        if (station.metaType == com.slightlyepic.radio.data.MetaType.NONE) return
+        if (station.metaType == com.SlightlyEpic.Radio.data.MetaType.NONE) return
 
         metadataJob = serviceScope.launch {
             while (true) {

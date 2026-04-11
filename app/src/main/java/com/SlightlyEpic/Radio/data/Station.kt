@@ -1,4 +1,4 @@
-package com.slightlyepic.radio.data
+package com.SlightlyEpic.Radio.data
 
 data class Station(
     val id: Int,

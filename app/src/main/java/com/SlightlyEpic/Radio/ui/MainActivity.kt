@@ -1,4 +1,4 @@
-package com.slightlyepic.radio.ui
+package com.SlightlyEpic.Radio.ui
 
 import android.Manifest
 import android.content.ComponentName
@@ -17,9 +17,9 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
-import com.slightlyepic.radio.data.Station
-import com.slightlyepic.radio.service.RadioPlaybackService
-import com.slightlyepic.radio.ui.theme.SlightlyEpicRadioTheme
+import com.SlightlyEpic.Radio.data.Station
+import com.SlightlyEpic.Radio.service.RadioPlaybackService
+import com.SlightlyEpic.Radio.ui.theme.SlightlyEpicRadioTheme
 
 class MainActivity : ComponentActivity() {
 

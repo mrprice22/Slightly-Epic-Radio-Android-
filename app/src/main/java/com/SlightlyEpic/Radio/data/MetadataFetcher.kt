@@ -1,4 +1,4 @@
-package com.slightlyepic.radio.data
+package com.SlightlyEpic.Radio.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

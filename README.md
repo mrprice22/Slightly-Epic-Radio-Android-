@@ -46,7 +46,7 @@ An internet radio player for Android featuring 14 curated stations across multip
 ## Project Structure
 
 ```
-app/src/main/java/com/slightlyepic/radio/
+app/src/main/java/com/SlightlyEpic/Radio/
 ├── RadioApplication.kt                 # Application class
 ├── data/
 │   ├── Station.kt                      # Station model and repository

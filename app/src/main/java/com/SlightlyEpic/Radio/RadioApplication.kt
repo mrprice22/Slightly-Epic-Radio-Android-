@@ -1,4 +1,4 @@
-package com.slightlyepic.radio
+package com.SlightlyEpic.Radio
 
 import android.app.Application
 

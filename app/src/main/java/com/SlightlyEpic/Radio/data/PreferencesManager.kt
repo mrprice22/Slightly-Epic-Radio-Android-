@@ -1,4 +1,4 @@
-package com.slightlyepic.radio.data
+package com.SlightlyEpic.Radio.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore

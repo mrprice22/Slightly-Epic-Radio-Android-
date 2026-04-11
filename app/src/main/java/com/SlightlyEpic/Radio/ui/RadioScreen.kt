@@ -1,4 +1,4 @@
-package com.slightlyepic.radio.ui
+package com.SlightlyEpic.Radio.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -57,7 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.slightlyepic.radio.data.Station
+import com.SlightlyEpic.Radio.data.Station
 
 @Composable
 fun RadioScreen(viewModel: RadioViewModel) {

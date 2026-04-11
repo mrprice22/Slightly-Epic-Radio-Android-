@@ -1,4 +1,4 @@
-package com.slightlyepic.radio.ui.theme
+package com.SlightlyEpic.Radio.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
