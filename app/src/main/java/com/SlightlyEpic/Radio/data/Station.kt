@@ -162,6 +162,33 @@ object StationRepository {
             logoResName = "zen_garden",
             metaUrl = "https://kathy.torontocast.com:3250/status-json.xsl",
             metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 16,
+            title = "Synthetic FM",
+            streamUrl = "http://stream.syntheticfm.com:8040/live",
+            streamFormat = "mp3",
+            logoResName = "synthetic_fm",
+            metaUrl = "http://stream.syntheticfm.com:8040/status-json.xsl",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 17,
+            title = "Synthetic FM (ITA)",
+            streamUrl = "http://stream.syntheticfm.com:8030/stream",
+            streamFormat = "mp3",
+            logoResName = "synthetic_fm_ita",
+            metaUrl = "http://stream.syntheticfm.com:8030/status-json.xsl",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 18,
+            title = "Radio Popolare (ITA)",
+            streamUrl = "https://livex.radiopopolare.it/radiopop",
+            streamFormat = "mp3",
+            logoResName = "radio_popolare_milano",
+            metaUrl = null,
+            metaType = MetaType.NONE
         )
     )
 }
