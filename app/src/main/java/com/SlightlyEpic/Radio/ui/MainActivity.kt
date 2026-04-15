@@ -63,7 +63,13 @@ class MainActivity : ComponentActivity() {
 
             viewModel.onPlayStation = { station -> playStation(controller, station) }
             viewModel.onPause = { controller.pause() }
-            viewModel.onResume = { controller.play() }
+            viewModel.onResume = {
+                if (controller.currentMediaItem == null) {
+                    playStation(controller, viewModel.uiState.value.selectedStation)
+                } else {
+                    controller.play()
+                }
+            }
 
             controller.addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
