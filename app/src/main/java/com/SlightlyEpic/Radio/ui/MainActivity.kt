@@ -19,6 +19,7 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
 import com.SlightlyEpic.Radio.data.Station
 import com.SlightlyEpic.Radio.service.RadioPlaybackService
+import kotlin.math.max
 import com.SlightlyEpic.Radio.ui.theme.SlightlyEpicRadioTheme
 
 class MainActivity : ComponentActivity() {
@@ -69,6 +70,19 @@ class MainActivity : ComponentActivity() {
                 } else {
                     controller.play()
                 }
+            }
+            viewModel.onSeekRelative = { deltaMs ->
+                val newPos = max(0L, controller.currentPosition + deltaMs)
+                controller.seekTo(newPos)
+                controller.play()
+            }
+            viewModel.onSeekToBufferStart = {
+                controller.seekTo(0)
+                controller.play()
+            }
+            viewModel.onSeekToLive = {
+                controller.seekToDefaultPosition()
+                controller.play()
             }
 
             controller.addListener(object : Player.Listener {

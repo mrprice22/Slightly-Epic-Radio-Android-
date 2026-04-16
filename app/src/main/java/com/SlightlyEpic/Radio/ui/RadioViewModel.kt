@@ -45,6 +45,9 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     var onPlayStation: ((Station) -> Unit)? = null
     var onPause: (() -> Unit)? = null
     var onResume: (() -> Unit)? = null
+    var onSeekRelative: ((Long) -> Unit)? = null
+    var onSeekToBufferStart: (() -> Unit)? = null
+    var onSeekToLive: (() -> Unit)? = null
 
     init {
         viewModelScope.launch {
@@ -113,6 +116,26 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
             }
             _uiState.value = _uiState.value.copy(isPlaying = true)
         }
+    }
+
+    fun seekBack30() {
+        onSeekRelative?.invoke(-30_000L)
+        _uiState.value = _uiState.value.copy(isPlaying = true)
+    }
+
+    fun seekForward30() {
+        onSeekRelative?.invoke(30_000L)
+        _uiState.value = _uiState.value.copy(isPlaying = true)
+    }
+
+    fun seekToBufferStart() {
+        onSeekToBufferStart?.invoke()
+        _uiState.value = _uiState.value.copy(isPlaying = true)
+    }
+
+    fun seekToLive() {
+        onSeekToLive?.invoke()
+        _uiState.value = _uiState.value.copy(isPlaying = true)
     }
 
     fun updatePlayingState(isPlaying: Boolean) {
