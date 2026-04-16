@@ -6,6 +6,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,9 +27,14 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -44,13 +51,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -83,6 +96,9 @@ fun RadioScreen(viewModel: RadioViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
+                .pointerInput(Unit) {
+                    detectTapGestures(onLongPress = { viewModel.enterEditMode() })
+                }
         ) {
             // Top area: Station artwork and now playing
             NowPlayingSection(
@@ -98,6 +114,16 @@ fun RadioScreen(viewModel: RadioViewModel) {
                 stations = uiState.stations,
                 selectedIndex = uiState.selectedStationIndex,
                 onStationSelected = viewModel::selectStation
+            )
+        }
+
+        if (uiState.isEditMode) {
+            StationEditOverlay(
+                stations = uiState.allStations,
+                hiddenIds = uiState.hiddenStationIds,
+                onToggleVisibility = viewModel::toggleStationVisibility,
+                onMove = viewModel::moveStation,
+                onDismiss = viewModel::exitEditMode
             )
         }
     }
@@ -347,6 +373,220 @@ private fun StationCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 14.sp
+            )
+        }
+    }
+}
+
+private val EditRowHeightDp = 64
+
+@Composable
+private fun StationEditOverlay(
+    stations: List<Station>,
+    hiddenIds: Set<Int>,
+    onToggleVisibility: (Int) -> Unit,
+    onMove: (Int, Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val density = LocalDensity.current
+    val rowHeightPx = with(density) { EditRowHeightDp.dp.toPx() }
+
+    var draggingIndex by remember { mutableStateOf<Int?>(null) }
+    var dragOffsetY by remember { mutableStateOf(0f) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xEE000000))
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .pointerInput(Unit) { detectTapGestures { /* swallow taps */ } }
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "EDIT STATIONS",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White
+                    )
+                }
+            }
+
+            Text(
+                text = "Tap checkbox to hide/show. Drag the handle to reorder.",
+                color = Color(0xFFAAAAAA),
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                stations.forEachIndexed { index, station ->
+                    val isDragging = draggingIndex == index
+                    val visible = station.id !in hiddenIds
+                    EditRow(
+                        station = station,
+                        visible = visible,
+                        isDragging = isDragging,
+                        dragOffsetY = if (isDragging) dragOffsetY else 0f,
+                        onToggle = { onToggleVisibility(station.id) },
+                        dragModifier = Modifier.pointerInput(station.id) {
+                            detectDragGestures(
+                                onDragStart = {
+                                    draggingIndex = index
+                                    dragOffsetY = 0f
+                                },
+                                onDragEnd = {
+                                    draggingIndex = null
+                                    dragOffsetY = 0f
+                                },
+                                onDragCancel = {
+                                    draggingIndex = null
+                                    dragOffsetY = 0f
+                                },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    val current = draggingIndex ?: return@detectDragGestures
+                                    dragOffsetY += dragAmount.y
+                                    if (dragOffsetY > rowHeightPx / 2f && current < stations.lastIndex) {
+                                        onMove(current, current + 1)
+                                        draggingIndex = current + 1
+                                        dragOffsetY -= rowHeightPx
+                                    } else if (dragOffsetY < -rowHeightPx / 2f && current > 0) {
+                                        onMove(current, current - 1)
+                                        draggingIndex = current - 1
+                                        dragOffsetY += rowHeightPx
+                                    }
+                                }
+                            )
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditRow(
+    station: Station,
+    visible: Boolean,
+    isDragging: Boolean,
+    dragOffsetY: Float,
+    onToggle: () -> Unit,
+    dragModifier: Modifier
+) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(EditRowHeightDp.dp)
+            .graphicsLayer {
+                translationY = dragOffsetY
+                if (isDragging) {
+                    shadowElevation = 12f
+                    alpha = 0.95f
+                }
+            }
+            .background(if (isDragging) Color(0xFF222222) else Color.Transparent)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Checkbox area
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(if (visible) MaterialTheme.colorScheme.primary else Color(0xFF333333))
+                .clickable(onClick = onToggle),
+            contentAlignment = Alignment.Center
+        ) {
+            if (visible) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Visible",
+                    tint = Color.Black,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Logo
+        val logoResId = context.resources.getIdentifier(
+            station.logoResName, "drawable", context.packageName
+        )
+        if (logoResId != 0) {
+            Image(
+                painter = painterResource(id = logoResId),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color(0xFF333333)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Radio,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Title
+        Text(
+            text = station.title,
+            color = if (visible) Color.White else Color(0xFF888888),
+            fontSize = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+
+        // Drag handle
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .then(dragModifier),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.DragHandle,
+                contentDescription = "Drag to reorder",
+                tint = Color(0xFFBBBBBB)
             )
         }
     }

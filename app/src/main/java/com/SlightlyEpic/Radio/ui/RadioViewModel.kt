@@ -13,14 +13,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class RadioUiState(
-    val stations: List<Station> = StationRepository.stations,
-    val selectedStationIndex: Int = 0,
+    val allStations: List<Station> = StationRepository.stations,
+    val hiddenStationIds: Set<Int> = emptySet(),
+    val selectedStationId: Int = StationRepository.stations.first().id,
     val isPlaying: Boolean = false,
     val nowPlaying: NowPlaying = NowPlaying(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val isEditMode: Boolean = false
 ) {
+    val stations: List<Station>
+        get() = allStations.filter { it.id !in hiddenStationIds }
+
+    val selectedStationIndex: Int
+        get() {
+            val i = stations.indexOfFirst { it.id == selectedStationId }
+            return if (i >= 0) i else 0
+        }
+
     val selectedStation: Station
-        get() = stations[selectedStationIndex]
+        get() = stations.getOrNull(selectedStationIndex) ?: allStations.first()
 }
 
 class RadioViewModel(application: Application) : AndroidViewModel(application) {
@@ -37,27 +48,53 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
+            val base = StationRepository.stations
+            val savedOrder = preferencesManager.getStationOrder()
+            val ordered = if (savedOrder != null) {
+                val byId = base.associateBy { it.id }
+                val inOrder = savedOrder.mapNotNull { byId[it] }
+                val missing = base.filter { it.id !in savedOrder.toSet() }
+                inOrder + missing
+            } else {
+                base
+            }
+            val hidden = preferencesManager.getHiddenStations()
+                .filter { id -> base.any { it.id == id } }
+                .toSet()
             val lastIndex = preferencesManager.getLastStationIndex()
-                .coerceIn(0, StationRepository.stations.size - 1)
+                .coerceIn(0, base.size - 1)
+            // lastIndex is legacy — interpret against original ordering
+            val lastId = base.getOrNull(lastIndex)?.id ?: ordered.first().id
+            val selectedId = if (lastId in hidden) {
+                ordered.firstOrNull { it.id !in hidden }?.id ?: ordered.first().id
+            } else {
+                lastId
+            }
             _uiState.value = _uiState.value.copy(
-                selectedStationIndex = lastIndex,
+                allStations = ordered,
+                hiddenStationIds = hidden,
+                selectedStationId = selectedId,
                 isLoading = false
             )
         }
     }
 
     fun selectStation(index: Int) {
-        val clamped = index.coerceIn(0, _uiState.value.stations.size - 1)
+        val visible = _uiState.value.stations
+        if (visible.isEmpty()) return
+        val clamped = index.coerceIn(0, visible.size - 1)
+        val station = visible[clamped]
         _uiState.value = _uiState.value.copy(
-            selectedStationIndex = clamped,
+            selectedStationId = station.id,
             nowPlaying = NowPlaying()
         )
 
         viewModelScope.launch {
-            preferencesManager.saveLastStationIndex(clamped)
+            val all = _uiState.value.allStations
+            val legacyIndex = all.indexOfFirst { it.id == station.id }.coerceAtLeast(0)
+            preferencesManager.saveLastStationIndex(legacyIndex)
         }
 
-        val station = _uiState.value.selectedStation
         onPlayStation?.invoke(station)
         _uiState.value = _uiState.value.copy(isPlaying = true)
     }
@@ -80,34 +117,75 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(isPlaying = isPlaying)
     }
 
+    fun enterEditMode() {
+        _uiState.value = _uiState.value.copy(isEditMode = true)
+    }
+
+    fun exitEditMode() {
+        _uiState.value = _uiState.value.copy(isEditMode = false)
+    }
+
+    fun toggleStationVisibility(stationId: Int) {
+        val current = _uiState.value
+        val newHidden = current.hiddenStationIds.toMutableSet()
+        val hiding: Boolean
+        if (stationId in newHidden) {
+            newHidden.remove(stationId)
+            hiding = false
+        } else {
+            // Block hiding the last visible station
+            if (current.stations.size <= 1) return
+            newHidden.add(stationId)
+            hiding = true
+        }
+        val updated = current.copy(hiddenStationIds = newHidden)
+        _uiState.value = updated
+        viewModelScope.launch {
+            preferencesManager.saveHiddenStations(newHidden)
+        }
+
+        // If the now-playing station was just hidden, switch to the first visible one.
+        if (hiding && stationId == current.selectedStationId) {
+            val firstVisible = updated.stations.firstOrNull() ?: return
+            selectStation(updated.stations.indexOf(firstVisible))
+        }
+    }
+
+    fun moveStation(fromIndex: Int, toIndex: Int) {
+        val current = _uiState.value
+        val list = current.allStations.toMutableList()
+        if (fromIndex !in list.indices || toIndex !in list.indices || fromIndex == toIndex) return
+        val item = list.removeAt(fromIndex)
+        list.add(toIndex, item)
+        _uiState.value = current.copy(allStations = list)
+        viewModelScope.launch {
+            preferencesManager.saveStationOrder(list.map { it.id })
+        }
+    }
+
     /** Called when the underlying player switches stations on its own (e.g. via Bluetooth next/prev). */
     fun onExternalStationChange(stationId: Int) {
-        val stations = _uiState.value.stations
-        val newIndex = stations.indexOfFirst { it.id == stationId }
-        if (newIndex < 0 || newIndex == _uiState.value.selectedStationIndex) return
+        val current = _uiState.value
+        if (current.allStations.none { it.id == stationId }) return
+        if (stationId == current.selectedStationId) return
 
-        _uiState.value = _uiState.value.copy(
-            selectedStationIndex = newIndex,
+        _uiState.value = current.copy(
+            selectedStationId = stationId,
             nowPlaying = NowPlaying()
         )
 
         viewModelScope.launch {
-            preferencesManager.saveLastStationIndex(newIndex)
+            val legacyIndex = current.allStations.indexOfFirst { it.id == stationId }.coerceAtLeast(0)
+            preferencesManager.saveLastStationIndex(legacyIndex)
         }
     }
 
-    /**
-     * Called when the media session's metadata changes — either because the service's polling
-     * pushed fresh now-playing info or because a new station was loaded. We only surface it to the
-     * UI when it's real track info, not the station-name placeholder.
-     */
     fun updateNowPlayingFromMetadata(title: String?, artist: String?) {
         val t = title?.trim().orEmpty()
         val a = artist?.trim().orEmpty()
         val current = _uiState.value
         val stationName = current.selectedStation.title
 
-        // Placeholder items have title == artist == station name — treat as "no track info yet".
         val looksLikeStationPlaceholder = t.isBlank() || t == a || t == stationName
         val nowPlaying = if (looksLikeStationPlaceholder) {
             NowPlaying()
