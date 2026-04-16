@@ -16,8 +16,21 @@ class PreferencesManager(private val context: Context) {
 
     companion object {
         private val LAST_STATION_INDEX = intPreferencesKey("last_station_index")
+        private val LAST_STATION_ID = intPreferencesKey("last_station_id")
         private val STATION_ORDER = stringPreferencesKey("station_order")
         private val HIDDEN_STATIONS = stringPreferencesKey("hidden_stations")
+    }
+
+    suspend fun getLastStationId(): Int? {
+        return context.dataStore.data
+            .map { prefs -> prefs[LAST_STATION_ID] }
+            .first()
+    }
+
+    suspend fun saveLastStationId(id: Int) {
+        context.dataStore.edit { prefs ->
+            prefs[LAST_STATION_ID] = id
+        }
     }
 
     suspend fun getLastStationIndex(): Int {

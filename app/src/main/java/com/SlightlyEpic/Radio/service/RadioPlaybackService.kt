@@ -1,6 +1,8 @@
 package com.SlightlyEpic.Radio.service
 
+import android.app.PendingIntent
 import android.content.Intent
+import android.os.Bundle
 import androidx.annotation.OptIn
 import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
@@ -8,8 +10,14 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
+import com.SlightlyEpic.Radio.R
 import com.SlightlyEpic.Radio.data.MetadataFetcher
 import com.SlightlyEpic.Radio.data.NowPlaying
 import com.SlightlyEpic.Radio.data.Station
@@ -57,7 +65,58 @@ class RadioPlaybackService : MediaSessionService() {
             }
         })
 
-        mediaSession = MediaSession.Builder(this, stationPlayer).build()
+        // Tap notification to return to the app
+        val sessionActivityIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, com.SlightlyEpic.Radio.ui.MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Close button for the notification
+        val closeButton = CommandButton.Builder()
+            .setDisplayName(getString(R.string.action_close))
+            .setIconResId(R.drawable.ic_close)
+            .setSessionCommand(SessionCommand(ACTION_CLOSE, Bundle.EMPTY))
+            .build()
+
+        mediaSession = MediaSession.Builder(this, stationPlayer)
+            .setSessionActivity(sessionActivityIntent)
+            .setCallback(object : MediaSession.Callback {
+                override fun onConnect(
+                    session: MediaSession,
+                    controller: MediaSession.ControllerInfo
+                ): MediaSession.ConnectionResult {
+                    val connectionResult = super.onConnect(session, controller)
+                    return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                        .setAvailableSessionCommands(
+                            connectionResult.availableSessionCommands.buildUpon()
+                                .add(SessionCommand(ACTION_CLOSE, Bundle.EMPTY))
+                                .build()
+                        )
+                        .build()
+                }
+
+                override fun onCustomCommand(
+                    session: MediaSession,
+                    controller: MediaSession.ControllerInfo,
+                    customCommand: SessionCommand,
+                    args: Bundle
+                ): ListenableFuture<SessionResult> {
+                    if (customCommand.customAction == ACTION_CLOSE) {
+                        session.player.apply {
+                            playWhenReady = false
+                            stop()
+                            clearMediaItems()
+                        }
+                        stopSelf()
+                        return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                    }
+                    return super.onCustomCommand(session, controller, customCommand, args)
+                }
+            })
+            .setCustomLayout(listOf(closeButton))
+            .build()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
@@ -144,6 +203,8 @@ class RadioPlaybackService : MediaSessionService() {
     }
 
     companion object {
+        private const val ACTION_CLOSE = "com.SlightlyEpic.Radio.CLOSE"
+
         fun buildStationMediaItem(station: Station): MediaItem {
             return MediaItem.Builder()
                 .setMediaId(station.id.toString())

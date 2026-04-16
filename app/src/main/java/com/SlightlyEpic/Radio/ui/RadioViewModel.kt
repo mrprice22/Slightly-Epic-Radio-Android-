@@ -61,10 +61,14 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
             val hidden = preferencesManager.getHiddenStations()
                 .filter { id -> base.any { it.id == id } }
                 .toSet()
-            val lastIndex = preferencesManager.getLastStationIndex()
-                .coerceIn(0, base.size - 1)
-            // lastIndex is legacy — interpret against original ordering
-            val lastId = base.getOrNull(lastIndex)?.id ?: ordered.first().id
+            // Prefer saved station ID; fall back to legacy index for older installs.
+            val lastId = preferencesManager.getLastStationId()
+                ?.takeIf { id -> ordered.any { it.id == id } }
+                ?: run {
+                    val lastIndex = preferencesManager.getLastStationIndex()
+                        .coerceIn(0, base.size - 1)
+                    base.getOrNull(lastIndex)?.id ?: ordered.first().id
+                }
             val selectedId = if (lastId in hidden) {
                 ordered.firstOrNull { it.id !in hidden }?.id ?: ordered.first().id
             } else {
@@ -90,9 +94,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         viewModelScope.launch {
-            val all = _uiState.value.allStations
-            val legacyIndex = all.indexOfFirst { it.id == station.id }.coerceAtLeast(0)
-            preferencesManager.saveLastStationIndex(legacyIndex)
+            preferencesManager.saveLastStationId(station.id)
         }
 
         onPlayStation?.invoke(station)
@@ -175,8 +177,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
         )
 
         viewModelScope.launch {
-            val legacyIndex = current.allStations.indexOfFirst { it.id == stationId }.coerceAtLeast(0)
-            preferencesManager.saveLastStationIndex(legacyIndex)
+            preferencesManager.saveLastStationId(stationId)
         }
     }
 
