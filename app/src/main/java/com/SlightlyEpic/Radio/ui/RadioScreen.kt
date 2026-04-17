@@ -51,6 +51,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -442,45 +443,47 @@ private fun StationEditOverlay(
                     .verticalScroll(rememberScrollState())
             ) {
                 stations.forEachIndexed { index, station ->
-                    val isDragging = draggingIndex == index
-                    val visible = station.id !in hiddenIds
-                    EditRow(
-                        station = station,
-                        visible = visible,
-                        isDragging = isDragging,
-                        dragOffsetY = if (isDragging) dragOffsetY else 0f,
-                        onToggle = { onToggleVisibility(station.id) },
-                        dragModifier = Modifier.pointerInput(station.id) {
-                            detectDragGestures(
-                                onDragStart = {
-                                    draggingIndex = index
-                                    dragOffsetY = 0f
-                                },
-                                onDragEnd = {
-                                    draggingIndex = null
-                                    dragOffsetY = 0f
-                                },
-                                onDragCancel = {
-                                    draggingIndex = null
-                                    dragOffsetY = 0f
-                                },
-                                onDrag = { change, dragAmount ->
-                                    change.consume()
-                                    val current = draggingIndex ?: return@detectDragGestures
-                                    dragOffsetY += dragAmount.y
-                                    if (dragOffsetY > rowHeightPx / 2f && current < stations.lastIndex) {
-                                        onMove(current, current + 1)
-                                        draggingIndex = current + 1
-                                        dragOffsetY -= rowHeightPx
-                                    } else if (dragOffsetY < -rowHeightPx / 2f && current > 0) {
-                                        onMove(current, current - 1)
-                                        draggingIndex = current - 1
-                                        dragOffsetY += rowHeightPx
+                    key(station.id) {
+                        val isDragging = draggingIndex == index
+                        val visible = station.id !in hiddenIds
+                        EditRow(
+                            station = station,
+                            visible = visible,
+                            isDragging = isDragging,
+                            dragOffsetY = if (isDragging) dragOffsetY else 0f,
+                            onToggle = { onToggleVisibility(station.id) },
+                            dragModifier = Modifier.pointerInput(Unit) {
+                                detectDragGestures(
+                                    onDragStart = {
+                                        draggingIndex = index
+                                        dragOffsetY = 0f
+                                    },
+                                    onDragEnd = {
+                                        draggingIndex = null
+                                        dragOffsetY = 0f
+                                    },
+                                    onDragCancel = {
+                                        draggingIndex = null
+                                        dragOffsetY = 0f
+                                    },
+                                    onDrag = { change, dragAmount ->
+                                        change.consume()
+                                        val current = draggingIndex ?: return@detectDragGestures
+                                        dragOffsetY += dragAmount.y
+                                        if (dragOffsetY > rowHeightPx / 2f && current < stations.lastIndex) {
+                                            onMove(current, current + 1)
+                                            draggingIndex = current + 1
+                                            dragOffsetY -= rowHeightPx
+                                        } else if (dragOffsetY < -rowHeightPx / 2f && current > 0) {
+                                            onMove(current, current - 1)
+                                            draggingIndex = current - 1
+                                            dragOffsetY += rowHeightPx
+                                        }
                                     }
-                                }
-                            )
-                        }
-                    )
+                                )
+                            }
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
             }
