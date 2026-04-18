@@ -59,6 +59,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
@@ -549,6 +550,8 @@ private fun StationEditOverlay(
                     key(station.id) {
                         val isDragging = draggingIndex == index
                         val visible = station.id !in hiddenIds
+                        val currentIndex by rememberUpdatedState(index)
+                        val lastIndex by rememberUpdatedState(stations.lastIndex)
                         EditRow(
                             station = station,
                             visible = visible,
@@ -558,7 +561,7 @@ private fun StationEditOverlay(
                             dragModifier = Modifier.pointerInput(Unit) {
                                 detectDragGestures(
                                     onDragStart = {
-                                        draggingIndex = index
+                                        draggingIndex = currentIndex
                                         dragOffsetY = 0f
                                     },
                                     onDragEnd = {
@@ -573,7 +576,7 @@ private fun StationEditOverlay(
                                         change.consume()
                                         val current = draggingIndex ?: return@detectDragGestures
                                         dragOffsetY += dragAmount.y
-                                        if (dragOffsetY > rowHeightPx / 2f && current < stations.lastIndex) {
+                                        if (dragOffsetY > rowHeightPx / 2f && current < lastIndex) {
                                             onMove(current, current + 1)
                                             draggingIndex = current + 1
                                             dragOffsetY -= rowHeightPx
