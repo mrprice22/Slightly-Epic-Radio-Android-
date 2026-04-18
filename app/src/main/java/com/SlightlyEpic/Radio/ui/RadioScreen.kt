@@ -36,9 +36,13 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.FastForward
+import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,9 +56,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -107,6 +113,10 @@ fun RadioScreen(viewModel: RadioViewModel) {
                 isPlaying = uiState.isPlaying,
                 nowPlayingText = uiState.nowPlaying.displayText,
                 onPlayPauseClick = viewModel::togglePlayPause,
+                onSeekBack30 = viewModel::seekBack30,
+                onSeekForward30 = viewModel::seekForward30,
+                onSeekToBufferStart = viewModel::seekToBufferStart,
+                onSeekToLive = viewModel::seekToLive,
                 modifier = Modifier.weight(1f)
             )
 
@@ -130,15 +140,33 @@ fun RadioScreen(viewModel: RadioViewModel) {
     }
 }
 
+private const val SeekControlsCooldownMs = 4000L
+
 @Composable
 private fun NowPlayingSection(
     station: Station,
     isPlaying: Boolean,
     nowPlayingText: String,
     onPlayPauseClick: () -> Unit,
+    onSeekBack30: () -> Unit,
+    onSeekForward30: () -> Unit,
+    onSeekToBufferStart: () -> Unit,
+    onSeekToLive: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    // Seek controls show while paused, and linger a few seconds after any seek click.
+    // Each click bumps the token, restarting the auto-hide timer.
+    var seekClickToken by remember { mutableIntStateOf(0) }
+    LaunchedEffect(seekClickToken, isPlaying) {
+        if (isPlaying && seekClickToken > 0) {
+            delay(SeekControlsCooldownMs)
+            seekClickToken = 0
+        }
+    }
+    val showSeekControls = !isPlaying || seekClickToken > 0
+    val bumpSeek = { seekClickToken++ }
 
     Box(
         modifier = modifier
@@ -249,7 +277,82 @@ private fun NowPlayingSection(
                     modifier = Modifier.size(40.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Seek controls are disabled for now. The underlying Icecast/Shoutcast
+            // streams are endless progressive HTTP feeds that ExoPlayer treats as
+            // non-seekable live sources, so only "jump to live" actually does
+            // anything — the other three have nothing to seek within. To make them
+            // work we'd need to build a client-side rolling cache (what VLC does):
+            //   1. Wrap the HttpDataSource in a CacheDataSource backed by a
+            //      SimpleCache (capped size, per-session or rolling).
+            //   2. Enable DefaultLoadControl.setBackBuffer(retainMs, false) so
+            //      past audio is retained instead of discarded.
+            //   3. ProgressiveMediaSource then reports the cached range as
+            //      seekable, currentPosition grows, and ±30s / jump-to-start work.
+            //      "Jump to live" becomes seekToDefaultPosition() (end of cache)
+            //      or re-opening the live URL.
+            // Until that's wired up, leave the buttons hidden to avoid dead UI.
+            @Suppress("ControlFlowWithEmptyBody")
+            if (false) {
+                AnimatedVisibility(
+                    visible = showSeekControls,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SeekButton(
+                            icon = Icons.Default.SkipPrevious,
+                            description = "Jump to start of buffer",
+                            onClick = { bumpSeek(); onSeekToBufferStart() }
+                        )
+                        SeekButton(
+                            icon = Icons.Default.FastRewind,
+                            description = "Skip back 30 seconds",
+                            onClick = { bumpSeek(); onSeekBack30() }
+                        )
+                        SeekButton(
+                            icon = Icons.Default.FastForward,
+                            description = "Skip forward 30 seconds",
+                            onClick = { bumpSeek(); onSeekForward30() }
+                        )
+                        SeekButton(
+                            icon = Icons.Default.SkipNext,
+                            description = "Jump to live",
+                            onClick = { bumpSeek(); onSeekToLive() }
+                        )
+                    }
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun SeekButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(52.dp)
+            .background(
+                color = Color(0xFF222222),
+                shape = CircleShape
+            )
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = description,
+            tint = Color.White,
+            modifier = Modifier.size(28.dp)
+        )
     }
 }
 

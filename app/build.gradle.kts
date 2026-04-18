@@ -11,8 +11,8 @@ android {
         applicationId = "com.SlightlyEpic.Radio"
         minSdk = 24
         targetSdk = 35
-        versionCode = 105
-        versionName = "2.0.1"
+        versionCode = 106
+        versionName = "2.0.2"
     }
 
     buildTypes {
