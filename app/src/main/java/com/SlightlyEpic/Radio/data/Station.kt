@@ -7,7 +7,10 @@ data class Station(
     val streamFormat: String,
     val logoResName: String,
     val metaUrl: String?,
-    val metaType: MetaType
+    val metaType: MetaType,
+    val active: Boolean = true,
+    // Station Manager only: keeps the station out of the web player. Unused by the app.
+    val hideOnWeb: Boolean = false
 )
 
 enum class MetaType {
@@ -18,7 +21,8 @@ enum class MetaType {
 
 object StationRepository {
 
-    val stations: List<Station> = listOf(
+    // Every station the Station Manager knows about, including inactive ones.
+    val allStations: List<Station> = listOf(
         Station(
             id = 0,
             title = "Slightly Epic Mashups",
@@ -35,7 +39,8 @@ object StationRepository {
             streamFormat = "mp3",
             logoResName = "kglw_bootlegger",
             metaUrl = "https://gizzradio.live/listen/listen/status-json.xsl",
-            metaType = MetaType.ICECAST
+            metaType = MetaType.ICECAST,
+            active = false
         ),
         Station(
             id = 2,
@@ -80,7 +85,8 @@ object StationRepository {
             streamFormat = "aac",
             logoResName = "badlands_classic_rock",
             metaUrl = "http://ec3.yesstreaming.net:2040/status-json.xsl",
-            metaType = MetaType.ICECAST
+            metaType = MetaType.ICECAST,
+            active = false
         ),
         Station(
             id = 7,
@@ -116,7 +122,8 @@ object StationRepository {
             streamFormat = "aac",
             logoResName = "sol_fm",
             metaUrl = "http://radiosolfm.bounceme.net:8002/status-json.xsl",
-            metaType = MetaType.ICECAST
+            metaType = MetaType.ICECAST,
+            active = false
         ),
         Station(
             id = 11,
@@ -125,7 +132,8 @@ object StationRepository {
             streamFormat = "aac",
             logoResName = "chill_lounge_radio",
             metaUrl = "http://harddanceradio.ddns.is74.ru:8000/status-json.xsl",
-            metaType = MetaType.ICECAST
+            metaType = MetaType.ICECAST,
+            hideOnWeb = true
         ),
         Station(
             id = 12,
@@ -189,6 +197,36 @@ object StationRepository {
             logoResName = "radio_popolare_milano",
             metaUrl = null,
             metaType = MetaType.NONE
+        ),
+        Station(
+            id = 19,
+            title = "Spooky Audio Machine",
+            streamUrl = "https://stream.homerslotr.com/spooky",
+            streamFormat = "mp3",
+            logoResName = "spooky_audio_machine",
+            metaUrl = "https://stream.homerslotr.com/status-json.xsl?mount=/spooky",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 20,
+            title = "Thursday Game Night",
+            streamUrl = "https://stream.homerslotr.com/mlg",
+            streamFormat = "mp3",
+            logoResName = "thursday_game_night",
+            metaUrl = "https://stream.homerslotr.com/status-json.xsl?mount=/mlg",
+            metaType = MetaType.ICECAST
+        ),
+        Station(
+            id = 21,
+            title = "PAC-MAN Audio Chaos",
+            streamUrl = "https://stream.homerslotr.com/pacman",
+            streamFormat = "mp3",
+            logoResName = "pacman_audio_chaos",
+            metaUrl = "https://stream.homerslotr.com/status-json.xsl?mount=/pacman",
+            metaType = MetaType.ICECAST
         )
     )
+
+    // Stations shown in the app. Inactive ones are switched off in the Station Manager.
+    val stations: List<Station> = allStations.filter { it.active }
 }
