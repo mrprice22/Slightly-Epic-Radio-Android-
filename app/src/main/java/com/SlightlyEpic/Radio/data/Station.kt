@@ -25,7 +25,7 @@ object StationRepository {
     val allStations: List<Station> = listOf(
         Station(
             id = 0,
-            title = "Slightly Epic Mashups",
+            title = "Todd's Rockn'Blues",
             streamUrl = "https://a6.asurahosting.com:6520/radio.mp3",
             streamFormat = "mp3",
             logoResName = "slightly_epic_mashups",
