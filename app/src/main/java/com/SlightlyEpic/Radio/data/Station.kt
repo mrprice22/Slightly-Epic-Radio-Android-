@@ -28,7 +28,7 @@ object StationRepository {
             title = "Todd's Rockn'Blues",
             streamUrl = "https://a6.asurahosting.com:6520/radio.mp3",
             streamFormat = "mp3",
-            logoResName = "slightly_epic_mashups",
+            logoResName = "todds_rocknblues",
             metaUrl = "https://a6.asurahosting.com:6520/status-json.xsl",
             metaType = MetaType.ICECAST
         ),

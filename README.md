@@ -8,7 +8,7 @@ An internet radio player for Android featuring 14 curated stations across multip
 
 | Icon | Station | Genre | Format | Stream URL |
 |------|---------|-------|--------|------------|
-| ![](app/src/main/res/drawable/slightly_epic_mashups.jpg) | Todd's Rockn'Blues | Rock / Blues | MP3 | https://a6.asurahosting.com:6520/radio.mp3 |
+| ![](app/src/main/res/drawable/todds_rocknblues.png) | Todd's Rockn'Blues | Blues, Rock, Country | MP3 | https://a6.asurahosting.com:6520/radio.mp3 |
 | ![](app/src/main/res/drawable/kglw_bootlegger.png) | K.G.L.W. Bootlegger | Rock / Live Bootlegs | MP3 | https://gizzradio.live/listen/listen/radio.mp3 |
 | ![](app/src/main/res/drawable/edm_techno_forever.jpg) | EDM Techno Forever | EDM / Techno | MP3 | http://ec1.yesstreaming.net:3500/stream |
 | ![](app/src/main/res/drawable/edr.jpg) | Electronic Dance Radio | EDM | MP3 | http://mpc1.mediacp.eu:18000/stream |
